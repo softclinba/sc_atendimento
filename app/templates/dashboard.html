@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% block titulo %}Dashboard - SOFT Clínica de Oftalmologia{% endblock %}
+{% block conteudo %}
+
+<h1 class="page-title">Dashboard</h1>
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+  <a href="{{ url_for('atendimentos.novo') }}" class="btn btn-ok">+ Novo atendimento</a>
+  <a href="{{ url_for('atendimentos.lista') }}" class="btn btn-limpar">Ver atendimentos</a>
+</div>
+
+<div class="card mb-3">
+  <div class="card-header d-flex align-items-center justify-content-between"
+       style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#dashboardCorpo" aria-expanded="true" aria-controls="dashboardCorpo">
+    <span class="fw-bold">Dashboard</span>
+    <i class="bi bi-chevron-up" id="icone-dashboard"></i>
+  </div>
+  <div class="collapse show" id="dashboardCorpo">
+    <div class="card-body">
+      <div class="card filtros mb-3">
+        <div class="row g-2 align-items-end">
+          <div class="col-auto">
+            <label class="form-label">Período</label>
+          </div>
+          <div class="col-auto">
+            <div class="btn-group" role="group" aria-label="Período do dashboard">
+              <a href="{{ url_for('dashboard.index', periodo='hoje') }}"
+                 class="btn {% if periodo == 'hoje' %}btn-ok{% else %}btn-limpar{% endif %}">Hoje</a>
+              <a href="{{ url_for('dashboard.index', periodo='semana') }}"
+                 class="btn {% if periodo == 'semana' %}btn-ok{% else %}btn-limpar{% endif %}">Esta semana</a>
+              <a href="{{ url_for('dashboard.index', periodo='mes') }}"
+                 class="btn {% if periodo == 'mes' %}btn-ok{% else %}btn-limpar{% endif %}">Este mês</a>
+              <a href="{{ url_for('dashboard.index', periodo='mes_anterior') }}"
+                 class="btn {% if periodo == 'mes_anterior' %}btn-ok{% else %}btn-limpar{% endif %}">Mês anterior</a>
+              <a href="{{ url_for('dashboard.index', periodo='ano') }}"
+                 class="btn {% if periodo == 'ano' %}btn-ok{% else %}btn-limpar{% endif %}">Este ano</a>
+              <a href="{{ url_for('dashboard.index', periodo='todos') }}"
+                 class="btn {% if periodo == 'todos' %}btn-ok{% else %}btn-limpar{% endif %}">Tudo</a>
+            </div>
+          </div>
+          <div class="col-12">
+            {% if inicio_periodo is not none %}
+            <small class="text-muted">{{ inicio_periodo|brdate }} a {{ fim_periodo|brdate }}</small>
+            {% else %}
+            <small class="text-muted">Todos os períodos (sem filtro)</small>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6">
+          <div class="card stat">
+            <div class="stat-label">TOTAL DE ATENDIMENTOS</div>
+            <div class="stat-value">{{ total_atendimentos }}</div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="card stat stat-destaque">
+            <div class="stat-label d-flex align-items-center justify-content-between">
+              VALOR TOTAL
+              <button type="button" class="btn btn-link btn-acao" id="btn-alternar-valor" data-bs-toggle="tooltip" data-bs-placement="top" title="Exibir valor" aria-label="Exibir/ocultar valor total">
+                <i class="bi bi-eye" id="icone-valor"></i>
+              </button>
+            </div>
+            <div class="stat-value" id="valor-total-oculto">••••••</div>
+            <div class="stat-value" id="valor-total-exibido" style="display:none">{{ valor_total|brl }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-lg-6">
+          <div class="card p-3">
+            <div class="stat-label mb-2">Atendimentos por médico</div>
+            <canvas id="graficoMedicos" height="120"></canvas>
+          </div>
+        </div>
+        <div class="col-12 col-lg-6">
+          <div class="card p-3">
+            <div class="stat-label mb-2">Total mensal do valor</div>
+            <canvas id="graficoMensal" height="120"></canvas>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="card p-3">
+            <div class="stat-label mb-2">Procedimentos x valor</div>
+            <canvas id="graficoProcedimentos" height="100"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  var btnAlternar = document.getElementById('btn-alternar-valor');
+  if (btnAlternar) {
+    var oculto = document.getElementById('valor-total-oculto');
+    var exibido = document.getElementById('valor-total-exibido');
+    var icone = document.getElementById('icone-valor');
+    btnAlternar.addEventListener('click', function () {
+      var mostrar = exibido.style.display === 'none';
+      exibido.style.display = mostrar ? '' : 'none';
+      oculto.style.display = mostrar ? 'none' : '';
+      if (mostrar) {
+        icone.classList.remove('bi-eye');
+        icone.classList.add('bi-eye-slash');
+        btnAlternar.setAttribute('title', 'Ocultar valor');
+        icone.classList.add('text-muted');
+      } else {
+        icone.classList.remove('bi-eye-slash');
+        icone.classList.add('bi-eye');
+        btnAlternar.setAttribute('title', 'Exibir valor');
+        icone.classList.remove('text-muted');
+      }
+    });
+  }
+
+  var corpoDash = document.getElementById('dashboardCorpo');
+  var iconeDash = document.getElementById('icone-dashboard');
+  if (corpoDash && iconeDash) {
+    corpoDash.addEventListener('show.bs.collapse', function () {
+      iconeDash.classList.remove('bi-chevron-down');
+      iconeDash.classList.add('bi-chevron-up');
+    });
+    corpoDash.addEventListener('hide.bs.collapse', function () {
+      iconeDash.classList.remove('bi-chevron-up');
+      iconeDash.classList.add('bi-chevron-down');
+    });
+  }
+</script>
+<script>
+  function formatarBRL(valor) {
+    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  // Tons de verde: quanto maior o valor, mais escura a barra
+  function coresVerdes(valores) {
+    var claro = [198, 231, 201];  // #c6e7c9 (verde claro)
+    var escuro = [25, 96, 53];    // #196035 (verde escuro)
+    var max = Math.max.apply(null, valores);
+    return valores.map(function (v) {
+      var t = max > 0 ? v / max : 0;
+      var r = Math.round(claro[0] + (escuro[0] - claro[0]) * t);
+      var g = Math.round(claro[1] + (escuro[1] - claro[1]) * t);
+      var b = Math.round(claro[2] + (escuro[2] - claro[2]) * t);
+      return "rgb(" + r + "," + g + "," + b + ")";
+    });
+  }
+
+  // Tons de azul: quanto maior o valor, mais escura a barra
+  function coresAzuis(valores) {
+    var claro = [210, 230, 245];  // #d2e6f5 (azul claro)
+    var escuro = [19, 70, 111];   // #13466f (azul escuro)
+    var max = Math.max.apply(null, valores);
+    return valores.map(function (v) {
+      var t = max > 0 ? v / max : 0;
+      var r = Math.round(claro[0] + (escuro[0] - claro[0]) * t);
+      var g = Math.round(claro[1] + (escuro[1] - claro[1]) * t);
+      var b = Math.round(claro[2] + (escuro[2] - claro[2]) * t);
+      return "rgb(" + r + "," + g + "," + b + ")";
+    });
+  }
+
+  Chart.defaults.color = '#495057';
+  Chart.defaults.font.family = 'inherit';
+
+  var dadosMedicos = {
+    labels: {{ medicos_labels|tojson }},
+    datasets: [{
+      label: 'Atendimentos',
+      data: {{ medicos_valores|tojson }},
+      backgroundColor: coresAzuis({{ medicos_valores|tojson }})
+    }]
+  };
+  new Chart(document.getElementById('graficoMedicos'), {
+    type: 'bar',
+    data: dadosMedicos,
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  new Chart(document.getElementById('graficoMensal'), {
+    type: 'line',
+    data: {
+      labels: {{ meses_labels|tojson }},
+      datasets: [{
+        label: 'Valor total',
+        data: {{ meses_valores|tojson }},
+        borderColor: '#2f6f9f',
+        backgroundColor: 'rgba(47,111,159,0.15)',
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: function (ctx) { return formatarBRL(ctx.parsed.y); }
+          }
+        }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('graficoProcedimentos'), {
+    type: 'bar',
+    data: {
+      labels: {{ procedimentos_labels|tojson }},
+      datasets: [{
+        label: 'Valor',
+        data: {{ procedimentos_valores|tojson }},
+        backgroundColor: coresVerdes({{ procedimentos_valores|tojson }})
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function (ctx) { return formatarBRL(ctx.parsed.y); }
+          }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

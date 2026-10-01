@@ -1,0 +1,28 @@
+{
+    "sqltools.connections": [
+        {
+            "dbDriver": "mssqlnodev8",
+            "connectionMethod": "Integrated",
+            "connectionTimeout": 15,
+            "sidePanelOptions": {
+                "inaccessibleDatabase": true,
+                "inaccessibleSchema": true
+            },
+            "previewLimit": 50,
+            "odbcDriver": "SQL Server",
+            "port": 1433,
+            "msnodesqlv8Options": {},
+            "driver": "SQL Server Community Ver",
+            "name": "SERV01D",
+            "group": "PRD",
+            "server": "SERV01D"
+        },
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "SoftClin",
+            "database": "${workspaceFolder:Soft_Clinica}/instance/app.db"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
+}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block titulo %}Detalhes do atendimento - SOFT Clínica{% endblock %}
+{% block conteudo %}
+
+<h1 class="page-title">Detalhes do atendimento #{{ atendimento.id }}</h1>
+
+<div class="card">
+  <dl class="row detalhes">
+    <dt class="col-sm-4">Data de atendimento</dt>
+    <dd class="col-sm-8">{{ atendimento.data_atendimento.strftime('%d/%m/%Y') }}</dd>
+
+    <dt class="col-sm-4">Paciente</dt>
+    <dd class="col-sm-8">{{ atendimento.paciente.nome if atendimento.paciente else '' }}</dd>
+
+    <dt class="col-sm-4">Médico</dt>
+    <dd class="col-sm-8">{{ atendimento.medico.nome if atendimento.medico else '' }}</dd>
+
+    <dt class="col-sm-4">Procedimento</dt>
+    <dd class="col-sm-8">{{ atendimento.procedimento.nome if atendimento.procedimento else '' }}</dd>
+
+    <dt class="col-sm-4">Valor</dt>
+    <dd class="col-sm-8">{{ atendimento.valor_float|brl }}</dd>
+
+    <dt class="col-sm-4">Forma de pagamento</dt>
+    <dd class="col-sm-8">{{ atendimento.forma_pagamento }}{% if atendimento.numero_parcelas %} ({{ atendimento.numero_parcelas }}x){% endif %}</dd>
+
+    <dt class="col-sm-4">Observações</dt>
+    <dd class="col-sm-8">{{ atendimento.observacoes or '—' }}</dd>
+
+    <dt class="col-sm-4">Cadastrado em</dt>
+    <dd class="col-sm-8">{{ atendimento.created_at.strftime('%d/%m/%Y %H:%M') if atendimento.created_at else '' }}</dd>
+  </dl>
+</div>
+
+<div class="acoes">
+  <a href="{{ url_for('atendimentos.lista') }}" class="btn btn-limpar">Voltar</a>
+  <a href="{{ url_for('atendimentos.editar', atendimento_id=atendimento.id) }}" class="btn btn-ok">Editar</a>
+</div>
+
+{% endblock %}

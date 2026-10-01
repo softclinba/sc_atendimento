@@ -1,0 +1,48 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Variáveis de ambiente (nunca versionar segredos)
+.env
+.env.*
+!.env.example
+
+# Banco de dados e instâncias
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# Flask
+.webassets-cache
+
+# Migrações geradas automaticamente
+migrations/versions/__pycache__/
+
+# Testes e cobertura
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Ferramentas
+.mypy_cache/
+.ruff_cache/
+.spyderproject
+.spyproject
+
+# Sistema operacional
+Thumbs.db
+.DS_Store
+desktop.ini

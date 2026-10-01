@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block titulo %}SOFT Clínica de Oftalmologia{% endblock %}</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="layout d-flex">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand d-flex align-items-center gap-2">
+      <img class="sidebar-logo" src="{{ url_for('static', filename='img/logo_soft.png') }}" alt="SOFT Clínica de Oftalmologia">
+      <span class="sidebar-titulo">SOFT Clínica</span>
+      <button type="button" class="btn btn-link sidebar-toggle ms-auto" id="btn-alternar-sidebar" aria-label="Retrair/expandir menu" title="Retrair/expandir menu">
+        <i class="bi bi-chevron-left" id="icone-sidebar"></i>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}" href="{{ url_for('dashboard.index') }}">
+            <i class="bi bi-speedometer2 me-2 sidebar-icone"></i><span class="sidebar-texto">Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint and request.endpoint.startswith('atendimentos.') %}active{% endif %}" href="{{ url_for('atendimentos.lista') }}">
+            <i class="bi bi-calendar-check me-2 sidebar-icone"></i><span class="sidebar-texto">Atendimentos</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint and request.endpoint.startswith('pacientes.') %}active{% endif %}" href="{{ url_for('pacientes.lista') }}">
+            <i class="bi bi-people me-2 sidebar-icone"></i><span class="sidebar-texto">Pacientes</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint and request.endpoint.startswith('medicos.') %}active{% endif %}" href="{{ url_for('medicos.lista') }}">
+            <i class="bi bi-person-badge me-2 sidebar-icone"></i><span class="sidebar-texto">Médicos</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint and request.endpoint.startswith('procedimentos.') %}active{% endif %}" href="{{ url_for('procedimentos.lista') }}">
+            <i class="bi bi-clipboard2-pulse me-2 sidebar-icone"></i><span class="sidebar-texto">Procedimentos</span>
+          </a>
+        </li>
+        {% if current_user.is_authenticated and current_user.eh_admin %}
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint and request.endpoint.startswith('usuarios.') %}active{% endif %}" href="{{ url_for('usuarios.index') }}">
+            <i class="bi bi-people-fill me-2 sidebar-icone"></i><span class="sidebar-texto">Usuários</span>
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+
+      {% if current_user.is_authenticated %}
+      <div class="sidebar-rodape">
+        <div class="sidebar-usuario">
+          <i class="bi bi-person-circle sidebar-icone"></i>
+          <span class="sidebar-texto text-truncate">{{ current_user.nome }}</span>
+        </div>
+        <div class="sidebar-acoes">
+          <a class="sidebar-texto" href="{{ url_for('auth.trocar_senha') }}" title="Trocar senha">
+            <i class="bi bi-key sidebar-icone"></i><span class="sidebar-texto">Senha</span>
+          </a>
+          <form method="post" action="{{ url_for('auth.logout') }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-link sidebar-texto" title="Sair">
+              <i class="bi bi-box-arrow-right sidebar-icone"></i><span class="sidebar-texto">Sair</span>
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+    </nav>
+  </aside>
+
+  <div class="conteudo">
+    <main class="wrap">
+        {% with mensagens = get_flashed_messages(with_categories=true) %}
+          {% if mensagens %}
+            {% for categoria, mensagem in mensagens %}
+              {% set variante = {'sucesso': 'success', 'erro': 'danger', 'danger': 'danger', 'aviso': 'warning'}.get(categoria, 'info') %}
+              <div class="alert alert-{{ variante }} alert-dismissible fade show" role="alert">
+                {{ mensagem }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+      {% block conteudo %}{% endblock %}
+    </main>
+
+    <footer class="rodape">
+      SOFT Clínica de Oftalmologia &mdash; Sistema de Atendimento de Pacientes
+    </footer>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/pt.js"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

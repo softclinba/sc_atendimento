@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block titulo %}{{ 'Editar' if editando else 'Novo' }} Atendimento - SOFT Clínica{% endblock %}
+{% block conteudo %}
+
+<h1 class="page-title">{{ 'Editar atendimento' if editando else 'Novo atendimento' }}</h1>
+
+{% set dados_paciente_id = form.paciente_id if form and form.paciente_id else (atendimento.paciente_id if atendimento else '') %}
+{% set dados_medico_id = form.medico_id if form and form.medico_id else (atendimento.medico_id if atendimento else '') %}
+{% set dados_proc_id = form.procedimento_id if form and form.procedimento_id else (atendimento.procedimento_id if atendimento else '') %}
+{% set dados_data = form.data_atendimento if form and form.data_atendimento else (atendimento.data_atendimento.strftime('%d/%m/%Y') if atendimento and atendimento.data_atendimento else '') %}
+{% set dados_valor = form.valor if form and form.valor != None else (atendimento.valor_float|brnum if atendimento else '') %}
+{% set dados_obs = form.observacoes if form and form.observacoes else (atendimento.observacoes if atendimento else '') %}
+{% set dados_pag = form.forma_pagamento if form and form.forma_pagamento else (atendimento.forma_pagamento if atendimento else '') %}
+{% set dados_parcelas = form.numero_parcelas if form and form.numero_parcelas else (atendimento.numero_parcelas if atendimento else '') %}
+
+<form method="post" class="card formulario" autocomplete="off" id="form-atendimento">
+  {% if not editando and not dados_data %}
+  <input type="hidden" id="data-hoje" value="{{ hoje_br }}">
+  {% endif %}
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="campo">
+    <label for="paciente_id">Nome do paciente *</label>
+    <div class="input-group">
+      <select id="paciente_id" name="paciente_id" class="form-select" required>
+        <option value="">Selecione o paciente...</option>
+        {% for p in pacientes %}
+        <option value="{{ p.id }}" {% if dados_paciente_id|string == p.id|string %}selected{% endif %}>{{ p.nome }}</option>
+        {% endfor %}
+      </select>
+      <button type="button" class="btn btn-limpar" data-bs-toggle="modal" data-bs-target="#modalNovoPaciente">+ Novo paciente</button>
+    </div>
+  </div>
+
+  <div class="campo">
+    <label for="data_atendimento">Data de atendimento *</label>
+    <input type="text" id="data_atendimento" name="data_atendimento" class="form-control mascara-data" inputmode="numeric" maxlength="10" placeholder="dd/mm/aaaa" required value="{{ dados_data }}">
+  </div>
+
+  <div class="campo">
+    <label for="medico_id">Nome do médico *</label>
+    <select id="medico_id" name="medico_id" class="form-select" required>
+      <option value="">Selecione o médico...</option>
+      {% for m in medicos %}
+      <option value="{{ m.id }}" {% if dados_medico_id|string == m.id|string %}selected{% endif %}>{{ m.nome }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="campo">
+    <label for="procedimento_id">Procedimento *</label>
+    <select id="procedimento_id" name="procedimento_id" class="form-select" required>
+      <option value="">Selecione o procedimento...</option>
+      {% for p in procedimentos %}
+      <option value="{{ p.id }}" data-valor="{{ p.valor_float }}" {% if dados_proc_id|string == p.id|string %}selected{% endif %}>{{ p.nome }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="campo">
+    <label for="valor">Valor *</label>
+    <div class="moeda">
+      <span>R$</span>
+      <input type="text" id="valor" name="valor" class="form-control" required placeholder="0,00" value="{{ dados_valor }}" readonly>
+    </div>
+    <small class="text-muted">Valor definido automaticamente pelo procedimento selecionado.</small>
+  </div>
+
+  <div class="campo full">
+    <label for="observacoes">Observações</label>
+    <textarea id="observacoes" name="observacoes" class="form-control" rows="3" placeholder="Opcional">{{ dados_obs }}</textarea>
+  </div>
+
+  <div class="campo">
+    <label for="forma_pagamento_tipo">Forma de pagamento *</label>
+    <select id="forma_pagamento_tipo" class="form-select" required>
+      <option value="">Selecione...</option>
+      <option value="Dinheiro">Dinheiro</option>
+      <option value="Pix">Pix</option>
+      <option value="Cartao">Cartão</option>
+    </select>
+    <input type="hidden" id="forma_pagamento" name="forma_pagamento" value="">
+  </div>
+
+  <div class="campo" id="campo-cartao" style="display:none">
+    <label for="cartao_tipo">Tipo de cartão *</label>
+    <select id="cartao_tipo" class="form-select">
+      <option value="">Selecione...</option>
+      <option value="Crédito">Crédito</option>
+      <option value="Débito">Débito</option>
+    </select>
+  </div>
+
+  <div class="campo" id="campo-parcelas" style="display:none">
+    <label for="numero_parcelas">Número de parcelas *</label>
+    <select id="numero_parcelas" name="numero_parcelas" class="form-select">
+      <option value="">Selecione...</option>
+      {% for i in range(1, MAX_PARCELAS + 1) %}
+      <option value="{{ i }}" {% if dados_parcelas|string == i|string %}selected{% endif %}>{{ i }}x</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="acoes">
+    <a href="{{ url_for('atendimentos.lista') }}" class="btn btn-limpar">Cancelar</a>
+    <button type="submit" class="btn btn-ok">Salvar</button>
+  </div>
+</form>
+
+<!-- Modal Novo Paciente -->
+<div class="modal fade" id="modalNovoPaciente" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Novo paciente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div id="novo-paciente-msg"></div>
+        <div class="campo">
+          <label for="novo_paciente_nome">Nome do paciente *</label>
+          <input type="text" id="novo_paciente_nome" class="form-control" placeholder="Nome completo">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-limpar" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-ok" id="salvar-novo-paciente">Salvar paciente</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const hojeBr = document.getElementById('data-hoje') ? document.getElementById('data-hoje').value : '';
+const dataInput = document.getElementById('data_atendimento');
+
+if (hojeBr && !dataInput.value) {
+  dataInput.value = hojeBr;
+}
+
+const pagTipo = document.getElementById('forma_pagamento_tipo');
+const pagHidden = document.getElementById('forma_pagamento');
+const campoCartao = document.getElementById('campo-cartao');
+const cartaoTipo = document.getElementById('cartao_tipo');
+const campoParcelas = document.getElementById('campo-parcelas');
+const selectParcelas = document.getElementById('numero_parcelas');
+
+const dadosPagAtual = {{ (dados_pag or '')|tojson }};
+
+function atualizarEstado() {
+  const tipo = pagTipo.value;
+  const ehCartao = tipo === 'Cartao';
+  campoCartao.style.display = ehCartao ? '' : 'none';
+  if (!ehCartao) cartaoTipo.value = '';
+
+  const ehCredito = ehCartao && cartaoTipo.value === 'Crédito';
+  campoParcelas.style.display = ehCredito ? '' : 'none';
+  if (!ehCredito) selectParcelas.value = '';
+
+  let valorFinal = tipo;
+  if (ehCartao) valorFinal = cartaoTipo.value;
+  pagHidden.value = valorFinal;
+}
+
+pagTipo.addEventListener('change', atualizarEstado);
+cartaoTipo.addEventListener('change', atualizarEstado);
+
+// Pré-seleção ao editar (valor real do backend)
+(function init() {
+  if (!dadosPagAtual) return;
+  if (dadosPagAtual === 'Dinheiro' || dadosPagAtual === 'Pix') {
+    pagTipo.value = dadosPagAtual;
+  } else if (dadosPagAtual === 'Crédito' || dadosPagAtual === 'Débito') {
+    pagTipo.value = 'Cartao';
+    cartaoTipo.value = dadosPagAtual;
+  }
+  atualizarEstado();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,5 @@
+# Dependencias so de desenvolvimento/testes.
+# No PythonAnywhere, instale apenas requirements.txt.
+-r requirements.txt
+
+pytest==8.2.2

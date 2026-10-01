@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOFT Clínica de Oftalmologia - Cadastro de Atendimentos</title>
+<style>
+  :root{
+    --azul:#1b5e9c; --azul-esc:#12456f; --azul-claro:#eaf2fa;
+    --borda:#d3dce6; --texto:#22303d; --suave:#66788a;
+    --ok:#1c7c54; --fundo:#f2f5f9;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--fundo); color:var(--texto);
+    font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:15px; line-height:1.5;
+  }
+  .topo{
+    background:linear-gradient(120deg,var(--azul-esc),var(--azul));
+    color:#fff; padding:22px 28px;
+  }
+  .topo h1{margin:0; font-size:24px; font-weight:700; letter-spacing:.4px}
+  .topo h1 strong{font-weight:800}
+  .topo .sub{margin:6px 0 0; font-size:14px; opacity:.9; font-weight:500}
+  .topo p{margin:4px 0 0; font-size:13px; opacity:.8}
+  .topo .marca{display:flex; align-items:center; gap:14px}
+  .topo .logo{
+    width:44px; height:44px; flex:0 0 44px; border-radius:50%;
+    background:rgba(255,255,255,.15); border:2px solid rgba(255,255,255,.5);
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; line-height:1;
+  }
+  .wrap{max-width:960px; margin:24px auto 60px; padding:0 16px}
+  .card{
+    background:#fff; border:1px solid var(--borda); border-radius:10px;
+    box-shadow:0 1px 3px rgba(20,40,60,.06); padding:24px 26px; margin-bottom:22px;
+  }
+  fieldset{border:0; margin:0 0 4px; padding:0}
+  legend{
+    font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.8px;
+    color:var(--azul); padding:0 0 10px;
+  }
+  .grid{display:grid; grid-template-columns:repeat(2,1fr); gap:16px 20px}
+  .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px 20px}
+  .campo{display:flex; flex-direction:column}
+  .campo.full{grid-column:1/-1}
+  label{font-size:13px; font-weight:600; margin-bottom:6px}
+  .dica{font-size:12px; color:var(--suave); font-weight:400; margin-top:5px}
+  .obr{color:#c0392b; margin-left:2px}
+  input[type=text],input[type=date],input[type=number],select,textarea{
+    font:inherit; color:var(--texto); background:#fff;
+    border:1px solid var(--borda); border-radius:7px; padding:10px 11px; width:100%;
+  }
+  input:focus,select:focus,textarea:focus{
+    outline:none; border-color:var(--azul); box-shadow:0 0 0 3px rgba(27,94,156,.15);
+  }
+  textarea{resize:vertical; min-height:74px}
+  .moeda{position:relative}
+  .moeda span{
+    position:absolute; left:11px; top:50%; transform:translateY(-50%);
+    font-size:13px; color:var(--suave); pointer-events:none;
+  }
+  .moeda input{padding-left:40px}
+  .opcoes{display:flex; flex-wrap:wrap; gap:10px}
+  .opcoes label{
+    display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;
+    border:1px solid var(--borda); border-radius:7px; padding:10px 16px;
+    background:#fff; font-weight:500; transition:.15s;
+  }
+  .opcoes input{accent-color:var(--azul); margin:0}
+  .opcoes label:hover{border-color:var(--azul); background:var(--azul-claro)}
+  .opcoes input:checked + span{color:var(--azul); font-weight:700}
+  .opcoes label:has(input:checked){border-color:var(--azul); background:var(--azul-claro)}
+  #bloco-cartao{
+    display:none; margin-top:18px; padding:18px 20px;
+    background:var(--azul-claro); border:1px dashed #a9c6e2; border-radius:9px;
+  }
+  form:has(#pg-cartao:checked) #bloco-cartao{display:block}
+  form:has(#pg-cartao:checked) #bloco-cartao select{background:#fff}
+
+  /* ---------- parcelamento ---------- */
+  #bloco-parcelas{display:none; margin-top:20px}
+  form:has(#md-credito:checked):is(:has(#pc2:checked),:has(#pc3:checked),:has(#pc4:checked),:has(#pc5:checked),:has(#pc6:checked),:has(#pc7:checked),:has(#pc8:checked),:has(#pc9:checked),:has(#pc10:checked),:has(#pc11:checked),:has(#pc12:checked)) #bloco-parcelas{display:block}
+  table.parc{background:#fff; border:1px solid var(--borda); border-radius:8px}
+  table.parc th{background:#f7f9fc}
+  table.parc th,table.parc td{padding:8px 10px; vertical-align:middle}
+  table.parc input{padding:7px 9px}
+  table.parc .num-parc{font-weight:700; color:var(--azul); white-space:nowrap}
+  table.parc tr.pl{display:none}
+  form #bloco-parcelas tr.p1{display:table-row}
+  form:is(:has(#pc2:checked),:has(#pc3:checked),:has(#pc4:checked),:has(#pc5:checked),:has(#pc6:checked),:has(#pc7:checked),:has(#pc8:checked),:has(#pc9:checked),:has(#pc10:checked),:has(#pc11:checked),:has(#pc12:checked)) tr.p2{display:table-row}
+  form:is(:has(#pc3:checked),:has(#pc4:checked),:has(#pc5:checked),:has(#pc6:checked),:has(#pc7:checked),:has(#pc8:checked),:has(#pc9:checked),:has(#pc10:checked),:has(#pc11:checked),:has(#pc12:checked)) tr.p3{display:table-row}
+  form:is(:has(#pc4:checked),:has(#pc5:checked),:has(#pc6:checked),:has(#pc7:checked),:has(#pc8:checked),:has(#pc9:checked),:has(#pc10:checked),:has(#pc11:checked),:has(#pc12:checked)) tr.p4{display:table-row}
+  form:is(:has(#pc5:checked),:has(#pc6:checked),:has(#pc7:checked),:has(#pc8:checked),:has(#pc9:checked),:has(#pc10:checked),:has(#pc11:checked),:has(#pc12:checked)) tr.p5{display:table-row}
+  form:is(:has(#pc6:checked),:has(#pc7:checked),:has(#pc8:checked),:has(#pc9:checked),:has(#pc10:checked),:has(#pc11:checked),:has(#pc12:checked)) tr.p6{display:table-row}
+  form:is(:has(#pc7:checked),:has(#pc8:checked),:has(#pc9:checked),:has(#pc10:checked),:has(#pc11:checked),:has(#pc12:checked)) tr.p7{display:table-row}
+  form:is(:has(#pc8:checked),:has(#pc9:checked),:has(#pc10:checked),:has(#pc11:checked),:has(#pc12:checked)) tr.p8{display:table-row}
+  form:is(:has(#pc9:checked),:has(#pc10:checked),:has(#pc11:checked),:has(#pc12:checked)) tr.p9{display:table-row}
+  form:is(:has(#pc10:checked),:has(#pc11:checked),:has(#pc12:checked)) tr.p10{display:table-row}
+  form:is(:has(#pc11:checked),:has(#pc12:checked)) tr.p11{display:table-row}
+  form:has(#pc12:checked) tr.p12{display:table-row}
+  .aviso{font-size:12px; color:var(--suave); margin:10px 0 0}
+  ul.lista-parc{margin:0; padding:0; list-style:none; font-size:13px}
+  ul.lista-parc li{white-space:nowrap; padding:1px 0}
+  ul.lista-parc b{color:var(--azul); margin-right:4px}
+  ul.lista-parc span{color:var(--suave); font-size:12px}
+  td.avista{color:var(--suave); font-size:13px}
+  .acoes{display:flex; gap:12px; justify-content:flex-end; flex-wrap:wrap; margin-top:8px}
+  button{
+    font:inherit; font-weight:600; border-radius:7px; padding:11px 24px;
+    cursor:pointer; border:1px solid transparent;
+  }
+  .btn-ok{background:var(--azul); color:#fff}
+  .btn-ok:hover{background:var(--azul-esc)}
+  .btn-limpar{background:#fff; color:var(--suave); border-color:var(--borda)}
+  .btn-limpar:hover{color:var(--texto); border-color:var(--suave)}
+  h2.sec{font-size:15px; margin:0 0 14px; color:var(--azul-esc)}
+  table{width:100%; border-collapse:collapse; font-size:14px}
+  th,td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--borda)}
+  th{background:#f7f9fc; font-size:12px; text-transform:uppercase; letter-spacing:.5px; color:var(--suave)}
+  td.num{text-align:right; font-variant-numeric:tabular-nums}
+  .tag{
+    display:inline-block; font-size:12px; font-weight:600; padding:3px 9px;
+    border-radius:20px; background:#e8f4ee; color:var(--ok);
+  }
+  .rodape{text-align:center; font-size:12px; color:var(--suave); margin-top:8px}
+  @media(max-width:680px){
+    .grid,.grid-3{grid-template-columns:1fr}
+    .card{padding:18px}
+    .tab-scroll{overflow-x:auto}
+  }
+</style>
+</head>
+<body>
+<header class="topo">
+  <div class="marca">
+    <div class="logo" aria-hidden="true">&#128065;</div>
+    <div>
+      <h1><strong>SOFT</strong> Clínica de Oftalmologia</h1>
+      <p class="sub">Cadastro de Atendimentos</p>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+<form class="card" id="form-cadastro" autocomplete="off">
+  <fieldset>
+    <legend>Dados do atendimento</legend>
+    <div class="grid">
+      <div class="campo">
+        <label for="nome">Nome do paciente<span class="obr">*</span></label>
+        <input type="text" id="nome" name="nome" placeholder="Nome completo" required>
+      </div>
+      <div class="campo">
+        <label for="data">Data<span class="obr">*</span></label>
+        <input type="date" id="data" name="data" required>
+      </div>
+      <div class="campo">
+        <label for="medico">Nome do médico<span class="obr">*</span></label>
+        <select id="medico" name="medico" required>
+          <option value="">Selecione o médico...</option>
+          <option value="1">Nedy Neves</option>
+          <option value="2">Marcela Souza</option>
+          <option value="3">Villane Dias</option>
+          <option value="4">Juliana</option>
+        </select>
+        <span class="dica">Lista carregada da tabela de médicos</span>
+      </div>
+      <div class="campo">
+        <label for="procedimento">Procedimento<span class="obr">*</span></label>
+        <select id="procedimento" name="procedimento" required>
+          <option value="">Selecione o procedimento...</option>
+          <option value="101">Consulta Particular</option>
+          <option value="102">Lente de Contato</option>
+          <option value="103">Teste Ortóptico</option>
+          <option value="104">Exames</option>
+          <option value="105">Outros</option>
+        </select>
+        <span class="dica">Lista carregada da tabela de procedimentos</span>
+      </div>
+      <div class="campo">
+        <label for="valor">Valor<span class="obr">*</span></label>
+        <div class="moeda">
+          <span>R$</span>
+          <input type="number" id="valor" name="valor" step="0.01" min="0" placeholder="0,00" required>
+        </div>
+        <span class="dica">Informe o valor cobrado no atendimento</span>
+      </div>
+      <div class="campo">
+        <label for="obs">Observações</label>
+        <input type="text" id="obs" name="obs" placeholder="Opcional">
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset style="margin-top:26px">
+    <legend>Forma de pagamento</legend>
+    <div class="opcoes">
+      <label><input type="radio" name="pagamento" id="pg-dinheiro" value="dinheiro" required><span>Dinheiro</span></label>
+      <label><input type="radio" name="pagamento" id="pg-pix" value="pix"><span>Pix</span></label>
+      <label><input type="radio" name="pagamento" id="pg-cartao" checked value="cartao"><span>Cartão</span></label>
+    </div>
+
+    <div id="bloco-cartao">
+      <h2 class="sec">Dados do cartão</h2>
+      <div class="grid-3">
+        <div class="campo">
+          <label for="bandeira">Bandeira<span class="obr">*</span></label>
+          <select id="bandeira" name="bandeira">
+            <option value="">Selecione...</option>
+            <option>Visa</option>
+            <option>Mastercard</option>
+            <option>Elo</option>
+            <option>American Express</option>
+            <option>Hipercard</option>
+            <option>Diners Club</option>
+            <option>Outra</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label>Modalidade<span class="obr">*</span></label>
+          <div class="opcoes">
+            <label><input type="radio" name="modalidade" id="md-credito" value="credito" checked><span>Crédito</span></label>
+            <label><input type="radio" name="modalidade" id="md-debito" value="debito"><span>Débito</span></label>
+          </div>
+        </div>
+        <div class="campo">
+          <label>Parcelas</label>
+          <div class="opcoes parc-op">
+            <label><input type="radio" name="parcelas" id="pc1" value="1"><span>1x</span></label>
+            <label><input type="radio" name="parcelas" id="pc2" value="2"><span>2x</span></label>
+            <label><input type="radio" name="parcelas" id="pc3" value="3"><span>3x</span></label>
+            <label><input type="radio" name="parcelas" id="pc4" value="4"><span>4x</span></label>
+            <label><input type="radio" name="parcelas" id="pc5" value="5"><span>5x</span></label>
+            <label><input type="radio" name="parcelas" id="pc6" value="6" checked><span>6x</span></label>
+            <label><input type="radio" name="parcelas" id="pc7" value="7"><span>7x</span></label>
+            <label><input type="radio" name="parcelas" id="pc8" value="8"><span>8x</span></label>
+            <label><input type="radio" name="parcelas" id="pc9" value="9"><span>9x</span></label>
+            <label><input type="radio" name="parcelas" id="pc10" value="10"><span>10x</span></label>
+            <label><input type="radio" name="parcelas" id="pc11" value="11"><span>11x</span></label>
+            <label><input type="radio" name="parcelas" id="pc12" value="12"><span>12x</span></label>
+          </div>
+          <span class="dica">Aplicável apenas ao crédito. Ao escolher 2x ou mais, informe o valor e a data de cada parcela abaixo.</span>
+        </div>
+      </div>
+
+      <div id="bloco-parcelas">
+        <h2 class="sec">Valores e vencimentos das parcelas</h2>
+        <div class="tab-scroll">
+        <table class="parc">
+          <thead>
+            <tr>
+              <th style="width:92px">Parcela</th>
+              <th>Valor da parcela (R$)<span class="obr">*</span></th>
+              <th>Data de vencimento<span class="obr">*</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="pl p1">
+              <td class="num-parc">1ª parcela</td>
+              <td><div class="moeda"><span>R$</span><input type="number" name="valor_parcela_1" step="0.01" min="0" value="108.33"></div></td>
+              <td><input type="date" name="vencimento_parcela_1" value="2026-10-02"></td>
+            </tr>
+            <tr class="pl p2">
+              <td class="num-parc">2ª parcela</td>
+              <td><div class="moeda"><span>R$</span><input type="number" name="valor_parcela_2" step="0.01" min="0" value="108.33"></div></td>
+              <td><input type="date" name="vencimento_parcela_2" value="2026-11-02"></td>
+            </tr>
+            <tr class="pl p3">
+              <td class="num-parc">3ª parcela</td>
+              <td><div class="moeda"><span>R$</span><input type="number" name="valor_parcela_3" step="0.01" min="0" value="108.33"></div></td>
+              <td><input type="date" name="vencimento_parcela_3" value="2026-12-02"></td>
+            </tr>
+            <tr class="pl p4">
+              <td class="num-parc">4ª parcela</td>
+              <td><div class="moeda"><span>R$</span><input type="number" name="valor_parcela_4" step="0.01" min="0" value="108.33"></div></td>
+              <td><input type="date" name="vencimento_parcela_4" value="2027-01-02"></td>
+            </tr>
+            <tr class="pl p5">
+              <td class="num-parc">5ª parcela</td>
+              <td><div class="moeda"><span>R$</span><input type="number" name="valor_parcela_5" step="0.01" min="0" value="108.33"></div></td>
+              <td><input type="date" name="vencimento_parcela_5" value="2027-02-02"></td>
+            </tr>
+            <tr class="pl p6">
+              <td class="num-parc">6ª parcela</td>
+              <td><div class="moeda"><span>R$</span><input type="number" name="valor_parcela_6" step="0.01" min="0" value="108.33"></div></td>
+              <td><input type="date" name="vencimento_parcela_6" value="2027-03-02"></td>
+            </tr>
+            <tr class="pl p7">
+              <td class="num-parc">7ª parcela</td>
+              <td><div class="moeda"><span>R$</span><input type="number" name="valor_parcela_7" step="0.01" min="0" placeholder="0,00"></div></td>
+              <td><input type="date" name="vencimento_parcela_7" value="2027-04-02"></td>
+            </tr>
+            <tr class="pl p8">
+              <td class="num-parc">8ª parcela</td>
+              <td><div class="moeda"><span>R$</span><input type="number" name="valor_parcela_8" step="0.01" min="0" placeholder="0,00"></div></td>
+              <td><input type="date" name="vencimento_parcela_8" value="2027-05-02"></td>
+            </tr>
+            <tr class="pl p9">
+              <td class="num-parc">9ª parcela</td>
+              <td><div class="moeda"><span>R$</span><input type="number" name="valor_parcela_9" step="0.01" min="0" placeholder="0,00"></div></td>
+              <td><input type="date" name="vencimento_parcela_9" value="2027-06-02"></td>
+            </tr>
+            <tr class="pl p10">
+              <td class="num-parc">10ª parcela</td>
+              <td><div class="moeda"><span>R$</span><input type="number" name="valor_parcela_10" step="0.01" min="0" placeholder="0,00"></div></td>
+              <td><input type="date" name="vencimento_parcela_10" value="2027-07-02"></td>
+            </tr>
+            <tr class="pl p11">
+              <td class="num-parc">11ª parcela</td>
+              <td><div class="moeda"><span>R$</span><input type="number" name="valor_parcela_11" step="0.01" min="0" placeholder="0,00"></div></td>
+              <td><input type="date" name="vencimento_parcela_11" value="2027-08-02"></td>
+            </tr>
+            <tr class="pl p12">
+              <td class="num-parc">12ª parcela</td>
+              <td><div class="moeda"><span>R$</span><input type="number" name="valor_parcela_12" step="0.01" min="0" placeholder="0,00"></div></td>
+              <td><input type="date" name="vencimento_parcela_12" value="2027-09-02"></td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="aviso">A soma das parcelas deve ser igual ao valor total do atendimento. Informe o vencimento de cada parcela conforme o repasse combinado com a operadora do cartão.</p>
+      </div>
+    </div>
+  </fieldset>
+
+  <div class="acoes" style="margin-top:26px">
+    <button type="reset" class="btn-limpar">Limpar</button>
+    <button type="submit" class="btn-ok">Salvar cadastro</button>
+  </div>
+</form>
+
+<section class="card">
+  <h2 class="sec">Registros cadastrados</h2>
+  <div class="tab-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Paciente</th>
+        <th>Data</th>
+        <th>Médico</th>
+        <th>Procedimento</th>
+        <th>Pagamento</th>
+        <th>Parcelas e vencimentos</th>
+        <th class="num">Valor</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Mariana Alves de Souza</td>
+        <td>28/08/2026</td>
+        <td>Nedy Neves</td>
+        <td>Consulta Particular</td>
+        <td><span class="tag">Pix</span></td>
+        <td class="avista">À vista</td>
+        <td class="num">250,00</td>
+      </tr>
+      <tr>
+        <td>José Ricardo Pinto</td>
+        <td>29/08/2026</td>
+        <td>Marcela Souza</td>
+        <td>Lente de Contato</td>
+        <td><span class="tag">Cartão &middot; Visa &middot; Crédito 3x</span></td>
+        <td>
+          <ul class="lista-parc">
+            <li><b>1ª</b> R$ 216,67 <span>venc. 29/09/2026</span></li>
+            <li><b>2ª</b> R$ 216,67 <span>venc. 29/10/2026</span></li>
+            <li><b>3ª</b> R$ 216,66 <span>venc. 29/11/2026</span></li>
+          </ul>
+        </td>
+        <td class="num">650,00</td>
+      </tr>
+      <tr>
+        <td>Letícia Campos</td>
+        <td>01/09/2026</td>
+        <td>Villane Dias</td>
+        <td>Teste Ortóptico</td>
+        <td><span class="tag">Dinheiro</span></td>
+        <td class="avista">À vista</td>
+        <td class="num">95,00</td>
+      </tr>
+      <tr>
+        <td>Paulo Henrique Braga</td>
+        <td>02/09/2026</td>
+        <td>Juliana</td>
+        <td>Exames</td>
+        <td><span class="tag">Cartão &middot; Elo &middot; Débito</span></td>
+        <td class="avista">À vista</td>
+        <td class="num">310,00</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <th colspan="6" style="text-align:right; background:#fff; color:#22303d">Total</th>
+        <th class="num" style="background:#fff; font-size:14px; color:#12456f">R$ 1.305,00</th>
+      </tr>
+    </tfoot>
+  </table>
+  </div>
+</section>
+
+<p class="rodape">Tela demonstrativa: as listas de médicos e procedimentos representam as tabelas cadastradas no sistema.</p>
+</div>
+</body>
+</html>

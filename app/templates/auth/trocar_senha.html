@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block titulo %}Trocar senha - SOFT Clínica{% endblock %}
+{% block conteudo %}
+
+<h1 class="page-title">Trocar senha</h1>
+
+<form method="post" class="card formulario" autocomplete="off">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="campo">
+    <label for="senha_atual">Senha atual *</label>
+    <input type="password" id="senha_atual" name="senha_atual" class="form-control" required
+           autocomplete="current-password">
+  </div>
+
+  <div class="campo">
+    <label for="nova_senha">Nova senha *</label>
+    <input type="password" id="nova_senha" name="nova_senha" class="form-control" required
+           minlength="8" autocomplete="new-password">
+    <small class="text-muted">Mínimo de 8 caracteres.</small>
+  </div>
+
+  <div class="campo">
+    <label for="confirmar_senha">Confirmar nova senha *</label>
+    <input type="password" id="confirmar_senha" name="confirmar_senha" class="form-control" required
+           minlength="8" autocomplete="new-password">
+  </div>
+
+  <div class="alert alert-info small">
+    <i class="bi bi-info-circle"></i>
+    Ao trocar a senha, todas as sessões abertas e o token de API deste usuário são invalidados.
+  </div>
+
+  <div class="acoes">
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-limpar">Cancelar</a>
+    <button type="submit" class="btn btn-ok">Salvar nova senha</button>
+  </div>
+</form>
+
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block titulo %}Usuários - SOFT Clínica{% endblock %}
+{% block conteudo %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-start mb-3 gap-2">
+  <h1 class="page-title mb-0">Usuários</h1>
+  <a href="{{ url_for('usuarios.novo') }}" class="btn btn-ok">+ Novo usuário</a>
+</div>
+
+{% if token_gerado %}
+<div class="card mb-3">
+  <h2 class="h6">Token de API — exibido uma única vez</h2>
+  <p class="text-muted small mb-2">
+    Copie agora e guarde em local seguro. Ele concede os mesmos poderes que o login
+    deste usuário e equivale a uma senha. Para usar, envie o header
+    <code>Authorization: Bearer &lt;token&gt;</code>.
+  </p>
+  <div class="input-group">
+    <input type="text" class="form-control font-monospace" value="{{ token_gerado }}" readonly
+           onclick="this.select()" id="token-gerado">
+    <button class="btn btn-limpar" type="button" onclick="navigator.clipboard && navigator.clipboard.writeText(document.getElementById('token-gerado').value)">
+      <i class="bi bi-clipboard"></i> Copiar
+    </button>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>E-mail</th>
+          <th>Perfil</th>
+          <th>Status</th>
+          <th>Token API</th>
+          <th class="text-end">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in usuarios %}
+        <tr>
+          <td>
+            {{ u.nome }}
+            {% if u.id == current_user.id %}<span class="badge text-bg-secondary">você</span>{% endif %}
+          </td>
+          <td>{{ u.email }}</td>
+          <td>{{ papeis.get(u.papel, u.papel) }}</td>
+          <td>
+            {% if u.ativo %}
+              <span class="badge text-bg-success">Ativo</span>
+            {% else %}
+              <span class="badge text-bg-secondary">Inativo</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if u.tem_token_api() %}
+              <span class="badge text-bg-success">Ativo</span>
+            {% else %}
+              <span class="text-muted small">sem token</span>
+            {% endif %}
+          </td>
+          <td class="text-end text-nowrap">
+            <a href="{{ url_for('usuarios.editar', usuario_id=u.id) }}" class="btn btn-sm btn-link btn-acao" data-bs-toggle="tooltip" data-bs-placement="top" title="Editar"><i class="bi bi-pencil"></i></a>
+
+            <form method="post" action="{{ url_for('usuarios.gerenciar_token', usuario_id=u.id) }}" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="acao" value="gerar">
+              <button type="submit" class="btn btn-sm btn-link btn-acao" data-bs-toggle="tooltip" data-bs-placement="top" title="Gerar novo token de API"><i class="bi bi-key"></i></button>
+            </form>
+
+            <button type="button" class="btn btn-sm btn-link btn-acao" data-bs-toggle="modal" data-bs-target="#modal-senha-{{ u.id }}" title="Redefinir senha"><i class="bi bi-password"></i></button>
+
+            {% if u.tem_token_api() %}
+            <form method="post" action="{{ url_for('usuarios.gerenciar_token', usuario_id=u.id) }}" class="d-inline" onsubmit="return confirmarExclusao()">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="acao" value="revogar">
+              <button type="submit" class="btn btn-sm btn-link btn-acao" data-bs-toggle="tooltip" data-bs-placement="top" title="Revogar token de API"><i class="bi bi-key-fill"></i></button>
+            </form>
+            {% endif %}
+
+            <form method="post" action="{{ url_for('usuarios.excluir', usuario_id=u.id) }}" class="d-inline" onsubmit="return confirmarExclusao()">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-link btn-acao text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="Excluir" {% if u.id == current_user.id %}disabled{% endif %}><i class="bi bi-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted">Nenhum usuário cadastrado.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% for u in usuarios %}
+<div class="modal fade" id="modal-senha-{{ u.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" method="post" action="{{ url_for('usuarios.redefinir_senha', usuario_id=u.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="modal-header">
+        <h5 class="modal-title">Redefinir senha de {{ u.nome }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="campo mb-0">
+          <label for="nova_senha_{{ u.id }}">Nova senha</label>
+          <input type="password" class="form-control" id="nova_senha_{{ u.id }}" name="nova_senha" required minlength="8" autocomplete="new-password">
+          <small class="text-muted">Mínimo de 8 caracteres. As sessões abertas e o token de API serão invalidados.</small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-limpar" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-ok">Redefinir</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

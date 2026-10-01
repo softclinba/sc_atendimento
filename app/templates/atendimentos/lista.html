@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block titulo %}Atendimentos - SOFT Clínica{% endblock %}
+{% block conteudo %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-start mb-3 gap-2">
+  <h1 class="page-title mb-0">Atendimentos</h1>
+  <a href="{{ url_for('atendimentos.novo') }}" class="btn btn-ok">+ Novo atendimento</a>
+</div>
+
+<form method="get" class="card filtros mb-3" id="form-filtros">
+  <div class="row g-2">
+    <div class="col-md-6">
+      <label class="form-label">Paciente</label>
+      <select name="paciente_id" class="form-select filtro-paciente">
+        <option value="">Todos os pacientes</option>
+        {% for p in pacientes %}
+        <option value="{{ p.id }}" {% if filtros.paciente_id|string == p.id|string %}selected{% endif %}>{{ p.nome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Médico</label>
+      <select name="medico_id" class="form-select">
+        <option value="">Todos os médicos</option>
+        {% for m in medicos %}
+        <option value="{{ m.id }}" {% if filtros.medico_id|string == m.id|string %}selected{% endif %}>{{ m.nome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Procedimento</label>
+      <select name="procedimento_id" class="form-select">
+        <option value="">Todos os procedimentos</option>
+        {% for p in procedimentos %}
+        <option value="{{ p.id }}" {% if filtros.procedimento_id|string == p.id|string %}selected{% endif %}>{{ p.nome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Forma de pagamento</label>
+      <select name="forma_pagamento" class="form-select">
+        <option value="">Todas as formas de pagamento</option>
+        {% for f in FORMAS_PAGAMENTO %}
+        <option value="{{ f }}" {% if filtros.forma_pagamento == f %}selected{% endif %}>{{ f }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Data inicial</label>
+      <input type="text" name="data_inicio" class="form-control mascara-data" inputmode="numeric" maxlength="10" placeholder="dd/mm/aaaa" value="{{ filtros.data_inicio }}">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Data final</label>
+      <input type="text" name="data_fim" class="form-control mascara-data" inputmode="numeric" maxlength="10" placeholder="dd/mm/aaaa" value="{{ filtros.data_fim }}">
+    </div>
+    <div class="col-12">
+      <button type="submit" class="btn btn-ok">Filtrar</button>
+      <a href="{{ url_for('atendimentos.lista') }}" class="btn btn-limpar">Limpar filtros</a>
+    </div>
+  </div>
+</form>
+
+<div class="d-flex flex-wrap justify-content-end align-items-center gap-1 mb-3">
+  <span class="text-muted me-2">Exportar:</span>
+  <button type="button" class="btn btn-acao btn-exportar" data-formato="csv" data-bs-toggle="tooltip" data-bs-placement="top" title="Exportar CSV" aria-label="Exportar CSV"><i class="bi bi-filetype-csv"></i></button>
+  <button type="button" class="btn btn-acao btn-exportar" data-formato="json" data-bs-toggle="tooltip" data-bs-placement="top" title="Exportar JSON" aria-label="Exportar JSON"><i class="bi bi-filetype-json"></i></button>
+  <button type="button" class="btn btn-acao btn-exportar" data-formato="pdf" data-bs-toggle="tooltip" data-bs-placement="top" title="Exportar PDF" aria-label="Exportar PDF"><i class="bi bi-file-earmark-pdf"></i></button>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Paciente</th>
+          <th>Médico</th>
+          <th>Procedimento</th>
+          <th class="text-end">Valor</th>
+          <th>Pagamento</th>
+          <th class="text-center">Parcelas</th>
+          <th class="text-end">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in atendimentos %}
+        <tr>
+          <td>{{ a.data_atendimento.strftime('%d/%m/%Y') }}</td>
+          <td>{{ a.paciente.nome if a.paciente else '' }}</td>
+          <td>{{ a.medico.nome if a.medico else '' }}</td>
+          <td>{{ a.procedimento.nome if a.procedimento else '' }}</td>
+          <td class="text-end">{{ a.valor_float|brl }}</td>
+          <td>{{ a.forma_pagamento }}</td>
+          <td class="text-center">{% if a.forma_pagamento == 'Crédito' and a.numero_parcelas %}{{ a.numero_parcelas }}x{% else %}-{% endif %}</td>
+          <td class="text-end text-nowrap">
+            <a href="{{ url_for('atendimentos.detalhes', atendimento_id=a.id) }}" class="btn btn-sm btn-link btn-acao" data-bs-toggle="tooltip" data-bs-placement="top" title="Visualizar"><i class="bi bi-eye"></i></a>
+            <a href="{{ url_for('atendimentos.editar', atendimento_id=a.id) }}" class="btn btn-sm btn-link btn-acao" data-bs-toggle="tooltip" data-bs-placement="top" title="Editar"><i class="bi bi-pencil"></i></a>
+            <form method="post" action="{{ url_for('atendimentos.excluir', atendimento_id=a.id) }}" class="d-inline" onsubmit="return confirmarExclusao()">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-link btn-acao text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="Excluir"><i class="bi bi-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center text-muted">Nenhum atendimento encontrado.</td></tr>
+        {% endfor %}
+      </tbody>
+      {% if atendimentos %}
+      <tfoot>
+        <tr>
+          <th colspan="5" class="text-end">Total</th>
+          <th class="text-end">{{ total|brl }}</th>
+          <th colspan="2"></th>
+        </tr>
+      </tfoot>
+      {% endif %}
+    </table>
+  </div>
+</div>
+
+{% endblock %}
