@@ -34,7 +34,8 @@ Como primeira opção, considere:
 * **Python 3.11+**
 * **Flask**
 * **SQLAlchemy**
-* **SQLite**
+* **PortgreSQL**
+<!-- * **SQLite** -->
 * **Bootstrap 5**
 * HTML5
 * CSS3
@@ -57,7 +58,7 @@ O banco deverá ser escolhido considerando principalmente:
 7. desempenho adequado para uma aplicação de pequeno/médio porte;
 8. possibilidade de migração futura para um banco mais robusto.
 
-**Dê preferência ao SQLite**, caso não exista uma razão técnica relevante para utilizar outra solução.
+<!-- **Dê preferência ao SQLite**, caso não exista uma razão técnica relevante para utilizar outra solução. -->
 
 Utilize **SQLAlchemy ORM** para acesso ao banco.
 
@@ -1002,6 +1003,7 @@ GET    /api/atendimentos/export/json
 
 Mesmo sendo uma aplicação simples:
 
+* possuir controle de usuários do sistema (perfil Admnistrador e Atendente);
 * utilizar SQLAlchemy ORM;
 * não concatenar SQL com entrada do usuário;
 * validar todos os dados no backend;
